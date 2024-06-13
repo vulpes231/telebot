@@ -56,7 +56,7 @@ app.post("/" + token, (req, res) => {
 
 // Set webhook
 const setWebhook = async () => {
-  const webhookUrl = `https://your-domain.com/${token}`; // Use https for secure communication
+  const webhookUrl = `https://telebot-wf5l.onrender.com/${token}`; // Use https for secure communication
   await bot.setWebHook(webhookUrl);
   console.log(`Webhook set to ${webhookUrl}`);
 };
