@@ -96,8 +96,6 @@ bot.on("message", (msg) => {
       bot.sendMessage(chatId, "Invalid RDP package selection.");
     }
   }
-
-  // Implement logic for cPanel selections if /cpanel commands are extended
 });
 
 bot.on("callback_query", (callbackQuery) => {
@@ -109,12 +107,26 @@ bot.on("callback_query", (callbackQuery) => {
     const rdpDetails = rdps[selectedPackage];
 
     if (rdpDetails) {
-      bot.sendMessage(
-        chatId,
-        `Send $${rdpDetails.price} to BTC Wallet: <YOUR_WALLET_ADDRESS>`
-      );
-      // Implement logic to mark order as confirmed and generate order ID
-      // Generate and store order ID for user
+      // Show payment options
+      const paymentOptions = [
+        {
+          command: "/btc",
+          label: "Pay to Address: 3F0adguewjshdFguy1hddwwhgk",
+        },
+        {
+          command: "/naira",
+          label: "Pay to 8125100249 Adebayo Olayinka (Opay)",
+        },
+        {
+          command: "/eth",
+          label: "Pay with Address:0xab6db5Eb6BDcA184Cb13D697D0dE377D3f0F023A",
+        },
+      ];
+
+      const optionsMessage = paymentOptions
+        .map((option) => `${option.command}: ${option.label}`)
+        .join("\n");
+      bot.sendMessage(chatId, `Select a payment option:\n${optionsMessage}`);
     } else {
       bot.sendMessage(chatId, "Invalid selection.");
     }
@@ -132,7 +144,7 @@ bot.on("callback_query", (callbackQuery) => {
 // Handle 'Paid' button click
 bot.onText(/paid/, (msg) => {
   // Implement logic to mark payment as received and generate order ID
-  const orderId = "123456"; // Dummy order ID, replace with actual generation logic
+  const orderId = "123456"; // set The orderId to the chatId with 0F starting it
   bot.sendMessage(msg.chat.id, `Order pending. Your order ID is: ${orderId}`);
 });
 
