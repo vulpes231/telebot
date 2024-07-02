@@ -42,16 +42,18 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome! Choose a package: /rdp or /cpanel");
 });
 
-// Handle /rdp command
 bot.onText(/\/rdp/, (msg) => {
-  const rdpOptions = Object.keys(rdps)
-    .map((key) => {
-      const rdp = rdps[key];
-      return `${key}: ${rdp.size} - $${rdp.price}`;
-    })
-    .join("\n");
+  const packageOptions = [
+    { command: "/small", label: "Small" },
+    { command: "/medium", label: "Medium" },
+    { command: "/large", label: "Large" },
+    { command: "/xlarge", label: "X-Large" },
+  ];
 
-  bot.sendMessage(msg.chat.id, `Choose an RDP package:\n${rdpOptions}`);
+  const optionsMessage = packageOptions
+    .map((option) => `${option.command}: ${option.label}`)
+    .join("\n");
+  bot.sendMessage(msg.chat.id, `Choose an RDP package:\n${optionsMessage}`);
 });
 
 // Handle /cpanel command
@@ -60,13 +62,22 @@ bot.onText(/\/cpanel/, (msg) => {
   // Implement cPanel options if needed
 });
 
-// Handle user messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
 
-  if (messageText.startsWith("/rdp")) {
-    const selectedPackage = messageText.replace("/rdp ", "");
+  // Check if the message starts with any of the package commands
+  if (
+    messageText.startsWith("/small") ||
+    messageText.startsWith("/medium") ||
+    messageText.startsWith("/large") ||
+    messageText.startsWith("/xlarge")
+  ) {
+    // Extract the selected package command
+    const selectedCommand = messageText.split(" ")[0];
+    const selectedPackage = selectedCommand.replace("/", ""); // Remove the leading slash
+
+    // Retrieve package details from rdps object
     const rdpDetails = rdps[selectedPackage];
 
     if (rdpDetails) {
@@ -83,7 +94,6 @@ bot.on("message", (msg) => {
 
   // Implement logic for cPanel selections if /cpanel commands are extended
 });
-
 // Handle 'Paid' button click
 bot.onText(/Paid/, (msg) => {
   // Implement logic to mark payment as received and generate order ID
@@ -101,6 +111,7 @@ bot.onText(/\/status/, (msg) => {
 
 // Webhook setup
 const setWebhook = async () => {
+  // const webhookUrl = `https://telebot-wf5l.onrender.com/${token}`;
   const webhookUrl = `https://telebot-wf5l.onrender.com/${token}`;
   await bot.setWebHook(webhookUrl);
   console.log(`Webhook set to ${webhookUrl}`);
@@ -115,6 +126,6 @@ app.post("/" + token, (req, res) => {
 // Start Express server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port http://localhost:${PORT}`);
   setWebhook();
 });
