@@ -1,6 +1,8 @@
 const TelegramBot = require("node-telegram-bot-api");
 const express = require("express");
 const bodyParser = require("body-parser");
+const fs = require("fs");
+const Orders = require("./models/orders.json");
 
 // Replace with your bot token
 const token = process.env.TELEGRAM_TOKEN;
@@ -35,6 +37,22 @@ const rdps = {
     duration: "1 month",
     renewable: true,
   },
+};
+
+const saveOrder = (order) => {
+  Orders.push(order);
+  fs.writeFile("./models/orders.json", JSON.stringify(Orders), (err) => {
+    if (err) {
+      console.error("Error writing orders file:", err);
+
+      bot.sendMessage(
+        order.userId,
+        "There was an error creating your order. Please try again later."
+      );
+    } else {
+      console.log("Order saved successfully.");
+    }
+  });
 };
 
 // Handle /start command
@@ -78,6 +96,17 @@ bot.on("message", (msg) => {
     const rdpDetails = rdps[selectedPackage];
 
     if (rdpDetails) {
+      const orderId = `00${msg.chat.id}`; // Simulated order ID generation
+      const orderDetails = {
+        orderId: orderId,
+        userId: msg.chat.id,
+        package: rdpDetails.size,
+        price: rdpDetails.price,
+        status: "pending",
+      };
+
+      // Save order to JSON (simulated database)
+      saveOrder(orderDetails);
       bot.sendMessage(
         chatId,
         `You selected ${selectedPackage}: ${rdpDetails.size} - $${rdpDetails.price}. Confirm your order?`,
@@ -109,18 +138,9 @@ bot.on("callback_query", (callbackQuery) => {
     if (rdpDetails) {
       // Show payment options
       const paymentOptions = [
-        {
-          command: "/btc",
-          label: "Pay to Address: 3F0adguewjshdFguy1hddwwhgk",
-        },
-        {
-          command: "/naira",
-          label: "Pay to 8125100249 Adebayo Olayinka (Opay)",
-        },
-        {
-          command: "/eth",
-          label: "Pay with Address:0xab6db5Eb6BDcA184Cb13D697D0dE377D3f0F023A",
-        },
+        { command: "/btc", label: "Pay with BTC" },
+        { command: "/naira", label: "Pay with Naira (Opay)" },
+        { command: "/eth", label: "Pay with ETH" },
       ];
 
       const optionsMessage = paymentOptions
@@ -141,19 +161,39 @@ bot.on("callback_query", (callbackQuery) => {
   bot.answerCallbackQuery(callbackQuery.id);
 });
 
-// Handle 'Paid' button click
-bot.onText(/paid/, (msg) => {
-  // Implement logic to mark payment as received and generate order ID
-  const orderId = "123456"; // set The orderId to the chatId with 0F starting it
-  bot.sendMessage(msg.chat.id, `Order pending. Your order ID is: ${orderId}`);
+bot.onText(/btc/, (msg) => {
+  bot.sendMessage(msg.chat.id, `Wallet Address: 3Fab05ghslamdhdsykk9ywzx`);
 });
 
-// Handle /status command
+bot.onText(/eth/, (msg) => {
+  bot.sendMessage(msg.chat.id, `8125100200 John Doe (GTB)`);
+});
+
+bot.onText(/naira/, (msg) => {
+  bot.sendMessage(
+    msg.chat.id,
+    `Wallet Address: 0xab6db5Eb6BDcA184Cb13D697D0dE377D3f0F023A `
+  );
+});
+
+bot.onText(/paid/, (msg) => {
+  const orderId = `00${msg.chat.id}`;
+
+  bot.sendMessage(
+    msg.chat.id,
+    `Order pending. Your order ID is: ${orderId}. check status with /status`
+  );
+});
+
 bot.onText(/\/status/, (msg) => {
-  // Implement logic to retrieve order status based on order ID (stored in a database)
-  const orderId = ""; // Retrieve order ID from user input or database
-  const orderStatus = ""; // Retrieve order status from database
-  bot.sendMessage(msg.chat.id, `Order ID: ${orderId}\nStatus: ${orderStatus}`);
+  const orderId = `00${msg.chat.id}`;
+  const order = Orders.find((order) => order.orderId === orderId);
+
+  if (order) {
+    bot.sendMessage(msg.chat.id, `Your order is ${order.status}`);
+  } else {
+    bot.sendMessage(msg.chat.id, "Order not found.");
+  }
 });
 
 // Webhook setup
