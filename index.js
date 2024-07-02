@@ -66,27 +66,32 @@ bot.on("message", (msg) => {
   const chatId = msg.chat.id;
   const messageText = msg.text;
 
-  // Check if the message starts with any of the package commands
   if (
     messageText.startsWith("/small") ||
     messageText.startsWith("/medium") ||
     messageText.startsWith("/large") ||
     messageText.startsWith("/xlarge")
   ) {
-    // Extract the selected package command
     const selectedCommand = messageText.split(" ")[0];
     const selectedPackage = selectedCommand.replace("/", ""); // Remove the leading slash
 
-    // Retrieve package details from rdps object
     const rdpDetails = rdps[selectedPackage];
 
     if (rdpDetails) {
       bot.sendMessage(
         chatId,
-        `You selected ${selectedPackage}: ${rdpDetails.size} - $${rdpDetails.price}. Confirm your order? (Yes/No)`
+        `You selected ${selectedPackage}: ${rdpDetails.size} - $${rdpDetails.price}. Confirm your order?`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "Yes", callback_data: `confirm_${selectedPackage}` },
+                { text: "No", callback_data: "cancel" },
+              ],
+            ],
+          },
+        }
       );
-      // Store user state for confirmation
-      // Implement logic to handle user response (Yes/No)
     } else {
       bot.sendMessage(chatId, "Invalid RDP package selection.");
     }
@@ -94,8 +99,38 @@ bot.on("message", (msg) => {
 
   // Implement logic for cPanel selections if /cpanel commands are extended
 });
+
+bot.on("callback_query", (callbackQuery) => {
+  const chatId = callbackQuery.message.chat.id;
+  const data = callbackQuery.data;
+
+  if (data.startsWith("confirm_")) {
+    const selectedPackage = data.replace("confirm_", "");
+    const rdpDetails = rdps[selectedPackage];
+
+    if (rdpDetails) {
+      bot.sendMessage(
+        chatId,
+        `Send $${rdpDetails.price} to BTC Wallet: <YOUR_WALLET_ADDRESS>`
+      );
+      // Implement logic to mark order as confirmed and generate order ID
+      // Generate and store order ID for user
+    } else {
+      bot.sendMessage(chatId, "Invalid selection.");
+    }
+  } else if (data === "cancel") {
+    bot.sendMessage(
+      chatId,
+      "Order canceled. Choose a package: /rdp or /cpanel"
+    );
+  }
+
+  // Answer callback query to remove the inline keyboard prompt
+  bot.answerCallbackQuery(callbackQuery.id);
+});
+
 // Handle 'Paid' button click
-bot.onText(/Paid/, (msg) => {
+bot.onText(/paid/, (msg) => {
   // Implement logic to mark payment as received and generate order ID
   const orderId = "123456"; // Dummy order ID, replace with actual generation logic
   bot.sendMessage(msg.chat.id, `Order pending. Your order ID is: ${orderId}`);
